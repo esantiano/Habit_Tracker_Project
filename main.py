@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, habits
+from app.routers import auth, habits, dashboard
 from app import models
 from app.db import engine
 
@@ -13,7 +13,8 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(habits.router)
+app.include_router(dashboard.router)
 # this is just a default route and can be removed later 
-# @app.get("/")
-# def hello():
-#     return {"message":"Hello FastAPI"}
+@app.get("/")
+def hello():
+    return {"message":"Hello, these are the endpoints for Habit_Tracker_Project"}

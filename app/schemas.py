@@ -90,3 +90,16 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+# -------------- DASHBOARD SCHEMAS --------------------
+
+class TodayHabitItem(BaseModel):
+    habit: HabitRead
+    is_completed: bool
+    current_streak: int
+    best_streak: int
+
+class DashboardTodayResponse(BaseModel):
+    date: date
+    habits: List[TodayHabitItem]
+    
