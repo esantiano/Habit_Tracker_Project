@@ -13,15 +13,19 @@ router = APIRouter(prefix="/habits", tags=["habits"])
 
 @router.get("/", response_model=List[schemas.HabitRead])
 def list_habits(
+    include_archived: bool = Query(False),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    habits = (
-        db.query(models.Habit)
-        .filter(models.Habit.user_id == current_user.id, models.Habit.is_archived == False)
-        .order_by(models.Habit.created_at)
-        .all()
-    )
+    q = db.query(models.Habit).filter(models.Habit.user_id == current_user.id)
+    
+    if not include_archived:
+        q = q.filter(models.Habit.is_archived == False)
+    else:
+        q = q.filter(models.Habit.is_archived == True)
+
+    habits = q.order_by(models.Habit.created_at).all()
+
     return habits
 
 @router.post("/", response_model=schemas.HabitRead, status_code=status.HTTP_201_CREATED)
@@ -73,6 +77,25 @@ def update_habit(
     for field, value in update_data.items():
         setattr(habit, field, value)
     
+    db.commit()
+    db.refresh(habit)
+    return habit
+
+@router.patch("/{habit_id}/restore", response_model=schemas.HabitRead)
+def restore_habit(
+    habit_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    habit = (
+        db.query(models.Habit)
+        .filter(models.Habit.id == habit_id, models.Habit.user_id == current_user.id)
+        .first()
+    )
+    if not habit:
+        raise HTTPException(status_cod=404, detail="Habit not found")
+    
+    habit.is_archived = False
     db.commit()
     db.refresh(habit)
     return habit
