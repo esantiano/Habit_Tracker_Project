@@ -10,6 +10,16 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=schemas.UserRead, status_code=status.HTTP_201_CREATED)
 def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
+    if len(user_in.email) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An email is required",
+        )
+    elif "@" not in user_in.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An email address must have an @ sign",
+        )
     # Check email
     existing_email = db.query(models.User).filter(models.User.email == user_in.email).first()
     if existing_email:
@@ -17,7 +27,11 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
-
+    if len(user_in.username) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Include a username",
+        )
     # Check username
     existing_username = db.query(models.User).filter(models.User.username == user_in.username).first()
     if existing_username:
@@ -25,7 +39,11 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already taken",
         )
-
+    if len(user_in.password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long",
+        )
     user = models.User(
         email=user_in.email,
         username=user_in.username,
