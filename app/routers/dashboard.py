@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 from app import models, schemas
 from app.dependencies import get_db, get_current_user
-from app.services.streaks import compute_streaks_for_daily
+from app.services.streaks import compute_streaks_for_daily, compute_streaks_for_x_per_week
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -64,6 +64,8 @@ def get_today_dashboard(
         log_dates = [log.date for log in habit_logs]
         if habit.goal_type == "DAILY":
             current_streak, best_streak = compute_streaks_for_daily(log_dates, today)
+        elif habit.goal_type == "X_PER_WEEK":
+            current_streak, best_streak = compute_streaks_for_x_per_week(log_dates, today, habit.target_per_period)
         else:
             current_streak, best_streak = 0, 0
         
